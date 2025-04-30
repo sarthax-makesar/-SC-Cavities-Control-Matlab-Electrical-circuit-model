@@ -1,0 +1,49 @@
+% Physical Constants
+f0 = 1.3e9; %resonant feq
+omega0 = 2*pi*f0;       %resonance ang feq
+Q_L = 3e6;
+rho = 520;              %ohm char impedance 
+delta_f = 0; 
+delta_omega = 2*pi*delta_f;
+
+% derived parameters
+f_half = f0/ (2*Q_L);       % half-power bandwidth Hz
+omega_half = 2 *pi*f_half;  % half-power bandwidth rad/s.
+
+%time ssettings 
+T = 1e-6;       %Sampling time 1ns
+t_end = 10e-3;   %end time 3ns
+N = round(t_end / T);   %No of steps
+time = (0:N-1)*T;       %time vector
+
+%initial Condition 
+v = zeros(1,N);          %cavity voltage
+i_drive = 16e-3 * ones(1,N);    %drive current 16 mA is constant pulse. to fill and maintain the cavit gradient of 25 MV/m.
+
+% system phasor 
+Ae = (1 - T * omega_half) + 1i*(T*delta_omega);
+%simulation Loop 
+for n = 1:N-1
+    v(n+1) = Ae * v(n) + rho * omega0 * T * i_drive(n);
+end
+
+%plot 
+figure;
+subplot(3,1,1);
+plot(time, real(v), 'b', time, imag(v),'r');
+xlabel('Time (s)'); 
+ylabel('Voltage (V)');
+legend('Inphase (I)','Quadrature (Q)');
+title('Cavity Voltage (Complex Envelop');
+
+subplot(3,1,2);
+plot(time, abs(v));
+xlabel('Time (s)'); 
+ylabel('Amplitude (V)');
+title('Cavity Field Amplitude');
+
+subplot(3,1,3);
+plot(time, angle(v));
+xlabel('Time (s)'); 
+ylabel('Phase (rad)');
+title('Cavity Field Phase');

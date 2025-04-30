@@ -1,0 +1,72 @@
+run("Electrical_model.m");
+% Physical Constants
+f0 = 1.3e9; %resonant feq
+omega0 = 2*pi*f0;       %resonance ang feq
+Q_L = 3e6;
+rho = 520;              %ohm char impedance 
+Ae = 1;
+delta_f = 50; 
+delta_omega = 2*pi*delta_f;
+C_value = 1e-12;
+
+Rl = (1/2 * omega_half *C_value);       %loaded resistance
+
+omega_half = 2 *pi*217;  % half-power bandwidth rad/s.
+
+i_0_mag = 16e-3;                        % generator current mag
+i_0_phase = 0;
+i_0 = i_0_mag * exp(1i * i_0_phase);    %generator current complex
+
+
+% driving current 
+i_drive_mag =16e-3;                    % drive current mag (A)
+i_drive_phase = 0;
+i_drive_ss = i_drive_mag * exp(1i * i_drive_phase);
+
+%bunch parameters 
+q = -8e-9;                              %bunch charge (C) 
+fb = 1e6;                               % bunch repetation rate (Hz) 
+i_b0 = 1 * fb;                          % Average beam current (A)
+v_m = 225e6;                            %cavity voltage amplitude(V)
+phi_b = pi/4;                           %beam phase in rad
+
+%Beam power 
+P_b = i_b0 *v_m * cos(phi_b);           
+
+% Equation for beam loading current (amplitude)
+i_b_amp = 2 * i_b0;
+
+% Beam Current Phasor
+ib_ss = (i_b_amp/2) * exp(1i*phi_b);    % Divide by 2 to align with i_b0
+
+% Steady State Solution for Driving Current
+v_ss_sim = v(end);                          % steady state voltage
+i_drive_ss = i_drive(end) ;             % steady state drive current 
+
+% explict steady state equation calculation
+V_ss_eq = ( rho *omega0) / (omega_half + 1i*delta_omega) * (i_drive_ss +ib_ss);
+
+% Compare simulation and equation
+fprintf('steady -state voltage (simualtion) : %.4f + j%.4f\n', real(v_ss_sim), imag(v_ss_sim));
+fprintf('steady -state voltage (equation) : %.4f + j%.4f\n', real(V_ss_eq), imag(V_ss_eq));
+fprintf('Difference : %.4f + j%.4f\n', abs (v_ss_sim - V_ss_eq));
+
+i_total_ss = i_drive_ss +ib_ss;
+
+
+
+
+
+% phasor diagram 
+figure;
+quiver(0,0,real(i_drive_ss), imag(i_drive_ss), 'b', 'LineWidth',2, 'DisplayName', 'Generate Current (ig)');
+hold on;
+quiver(0,0,real(ib_ss), imag(ib_ss), 'g', 'LineWidth',2,'DisplayName','Beam current (ib)');
+hold on;
+quiver(0,0,real(v_ss_sim), imag(v_ss_sim), 'r', 'LineWidth',2,'DisplayName','Cavity Voltage (v)');
+hold off;
+axis equal;
+xlabel('Real');
+ylabel('Imag');
+title('Phasor Diagram for steady state solution for driving current i0');
+legend('Location', 'best');
