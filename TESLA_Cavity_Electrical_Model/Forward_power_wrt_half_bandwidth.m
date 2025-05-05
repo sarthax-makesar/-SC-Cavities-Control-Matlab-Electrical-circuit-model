@@ -1,5 +1,5 @@
-%% Fig.2.4-2: Required Forward Power vs Relative Detuning
-clear; clc; close all;
+Required Forward Power vs Relative Detuning
+
 
 % 1) Physical constants
 f_half   = 217;               % Hz (half-bandwidth)
