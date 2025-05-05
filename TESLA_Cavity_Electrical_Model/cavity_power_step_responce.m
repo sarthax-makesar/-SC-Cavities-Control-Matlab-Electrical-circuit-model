@@ -1,27 +1,27 @@
-%% Fig. 2.4-1: Correct Power Curves with Thinner Lines and Clean Annotations
+%% Power Curves 
 clear; clc; close all;
 
-% --- 1. Constants ---
+%  Constants 
 f_half  = 217;                     
 omega_h = 2*pi*f_half;            
 C       = 0.235e-12;              
 Rl      = 1 / (2 * omega_h * C);  
 ig      = 16e-3;                   % A
 
-Pf = 0.5 * Rl * ig^2 / 1e3;        % Forward power (kW), constant
+Pf = 0.5 * Rl * ig^2 / 1e3;        % Forward power 
 
-% --- 2. Detunings & time span ---
+% Detunings & time span 
 detune_list = [0, 150, 250, 400];
 t_end  = 5 / omega_h;
 tspan  = linspace(0, t_end, 3000);
 opts   = odeset('RelTol',1e-8,'AbsTol',1e-10);
 
-% --- 3. Storage for results ---
+% Storage for results 
 N = numel(detune_list);
 Pr = zeros(N, numel(tspan));
 Pc = zeros(N, numel(tspan));
 
-% --- 4. Loop through detunings and solve ODE ---
+%  Loop through detunings and solve ODE 
 for k = 1:N
     df      = detune_list(k);
     Delta_w = 2 * pi * df;
@@ -40,7 +40,7 @@ for k = 1:N
     Pc(k,:) = Pf - Pr(k,:);                    % Cavity power [kW]
 end
 
-% --- 5. Plot ---
+% Plot 
 figure('Position',[100 100 800 500]); hold on; grid on;
 
 % Plot Pf (black solid line)
@@ -60,8 +60,6 @@ xlabel('time [\mus]', 'FontSize',12);
 ylabel('Power [kW]', 'FontSize',12);
 title('Pf (black), Pr (blue), Pc (orange) vs Time', 'FontSize',14);
 xlim([0 t_end*1e6]);
-
-% --- 6. Non-overlapping labels ---
 label_times = [0.2, 0.3, 0.4, 0.55, 0.65, 0.75, 0.83];  % as fraction of total time
 for k = 1:N
     idx = round(label_times(k) * numel(tspan));
