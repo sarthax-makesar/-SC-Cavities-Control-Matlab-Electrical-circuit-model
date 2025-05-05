@@ -1,7 +1,7 @@
-%% Cavity Envelope Amplitude vs Time — Staggered, Offset Labels
+%% Cavity Envelope Amplitude vs Time 
 clear; clc; close all;
 
-% --- Parameters (same as before) ---
+% Parameters 
 f_half   = 217;                   
 omega_h  = 2*pi*f_half;           
 C        = 0.235e-12;             
