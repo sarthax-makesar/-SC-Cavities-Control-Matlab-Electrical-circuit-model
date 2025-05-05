@@ -1,11 +1,11 @@
-%% Fig. 3.1-3: Electromechanical Cavity Model Simulation (Corrected with Proper R_L)
+% Electromechanical Cavity Model Simulation 
 clear; clc; close all;
 
-% --- 1. Physical & model constants from Table 3.1-1 ---
-rho      = 520;                      % Ohm (shunt impedance)
+%  Physical & model constants from Table 
+rho      = 520;                      %  shunt impedance
 QL       = 3e6;                      % Loaded Q
-Rl       = rho / (4 * QL);           % Correct loaded shunt impedance [Ohm]
-vc       = 25;                       % MV (desired steady-state voltage)
+Rl       = rho / (4 * QL);           % Correct loaded shunt impedance 
+vc       = 25;                       % MV 
 k_vec    = [0.1, 0.1, 0.1, 0.5];      % Hz/(MV)^2 (4 modes)
 df0_Hz   = sum(k_vec .* vc^2);       % Predetuning in Hz to cancel Lorentz pull
 Dw0      = 2 * pi * df0_Hz;          % rad/s
@@ -18,7 +18,7 @@ tau4     = 0.1e-3;                   % s (1st-order mode)
 % Derived current for steady-state
 ig       = vc * 1e6 / (2 * Rl);       % in A
 
-% --- 2. Discretization ---
+%  Discretization 
 T        = 1e-6;                     % s
 T_ms     = T * 1e3;
 t_total  = 20e-3;                   % 20 ms
@@ -30,7 +30,7 @@ t_ms     = n * T * 1e3;
 ig_n     = ig * ones(size(n));
 ig_n(t_ms > 10) = 0;
 
-% --- 3. Preallocate ---
+%  Preallocate 
 v        = zeros(size(n));           % complex voltage [V]
 ampl     = zeros(size(n));           % [MV]
 phase    = zeros(size(n));           % [rad]
@@ -51,7 +51,7 @@ for m = 1:3
 end
 b4 = 2 * pi * k_vec(4) / tau4;
 
-% --- 4. Simulation Loop ---
+%  Simulation Loop 
 for k = 1:N
     % Detuning computation
     Dw = Dw0 + sum(W2(1,:,k)) + dw4(k);
@@ -80,7 +80,7 @@ end
 % Trim trailing point
 ampl(end) = []; phase(end) = []; detHz(end) = []; t_ms(end) = [];
 
-% --- 5. Plotting ---
+% Plotting 
 figure('Position',[100 100 1000 600]);
 
 subplot(2,2,1);
