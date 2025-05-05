@@ -1,32 +1,32 @@
-%% Fig. 2.3-4 Right Panel: Phasor Trajectories with θ ≥ 0 for Δf = +150 Hz
+%% Phasor Trajectories with θ ≥ 0 for Δf = +150 Hz
 clear; clc; close all;
 
-% --- 1. Cavity and Generator Parameters ---
+% Cavity and Generator Parameters 
 f_half   = 217;                      % Hz (half-bandwidth)
 omega_h  = 2*pi*f_half;              % rad/s
 C        = 0.235e-12;                % F
-Rl       = 1 / (2 * omega_h * C);    % Ω
+Rl       = 1 / (2 * omega_h * C);    
 
 ig_mag   = 16e-3;                    % A
 ig_phase = 0;                        % align with real axis
 ig       = ig_mag * exp(1i * ig_phase);
 
-% --- 2. Detuning and Styles ---
+% Detuning and Styles 
 detune_list = [-400, -150, -50, 0, 50, 150, 400];  % Hz
 styles      = {'-','--',':','-.','-','--',':'};
 
-% --- 3. Time Span and ODE Options ---
+% Time Span and ODE Options 
 t_end = 5 / omega_h;
 opts  = odeset('RelTol',1e-8,'AbsTol',1e-10);
 
-% --- 4. Figure Setup ---
+% Figure Setup 
 figure('Position',[200 200 720 600]);
 hold on; grid on; axis equal;
 xlabel('Re\{v(t)\} (MV)', 'FontSize',12);
 ylabel('Im\{v(t)\} (MV)', 'FontSize',12);
 title('Cavity Phasor Trajectories with θ≥0 at Δf = +150 Hz', 'FontSize',14);
 
-% --- 5. Loop Over Detunings ---
+% Loop Over Detunings 
 for k = 1:numel(detune_list)
     df      = detune_list(k);
     Delta_w = 2*pi*df;
@@ -64,7 +64,7 @@ for k = 1:numel(detune_list)
     end
 end
 
-% --- 6. Reference Generator Phasor 2R_L i_g ---
+% Reference Generator Phasor 
 Pg = 2 * Rl * ig * 1e-6;
 quiver(0, 0, real(Pg), imag(Pg), 0, 'b', 'LineWidth',2, 'MaxHeadSize',0.6);
 text(real(Pg)*1.02, imag(Pg)*1.02, '2R_L i_g', 'Color','b','FontSize',11);
