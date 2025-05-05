@@ -1,22 +1,22 @@
-%% Using annotation arrows for phasor diagram
+
 clear; clc; close all;
 
-% --- 1. Cavity Parameters ---
+%  Cavity Parameters 
 omega_0 = 2 * pi * 1.3e9;
 omega_half = 2 * pi * 217;
 C_value = 0.235e-12;
 Rl = 1 / (2 * omega_half * C_value);
 
-% --- 2. Currents ---
+% Currents 
 ig = 16e-3 * exp(1i * (-0.3));
 ib = 8e-3 * exp(1i * (-0.11));
 i0 = ig - ib;
 
-% --- 3. Detuning ---
+% Detuning 
 tan_psi = 0.5;
 psi = atan(tan_psi);
 
-% --- 4. Scaling to MV ---
+% Scaling to MV 
 scale_factor = 2 * Rl;
 scale_to_MV = 1e-6;
 
@@ -27,7 +27,7 @@ v_magnitude = 2 * Rl * abs(i0) * cos(psi);
 v_direction = (i0/abs(i0)) * exp(1i * psi);
 v_plot = v_magnitude * v_direction * scale_to_MV;
 
-% --- 5. Setup Figure ---
+% Setup Figure 
 figure;
 hold on;
 axis equal;
@@ -49,33 +49,31 @@ ax_pos = ax.Position;    % normalized position of the axis
 ax_xlim = xlim;
 ax_ylim = ylim;
 
-% --- 6. Function to map (x,y) to normalized coordinates ---
+% Function to map (x,y) to normalized coordinates 
 map_to_norm = @(x, y) [(x-ax_xlim(1))/(ax_xlim(2)-ax_xlim(1))*ax_pos(3) + ax_pos(1), ...
                        (y-ax_ylim(1))/(ax_ylim(2)-ax_ylim(1))*ax_pos(4) + ax_pos(2)];
 
-% --- 7. Draw annotation arrows ---
 
-% ig (blue)
+% ig 
 p1 = map_to_norm(0, 0);
 p2 = map_to_norm(real(ig_plot), imag(ig_plot));
 annotation('arrow', [p1(1) p2(1)], [p1(2) p2(2)], 'Color', 'b', 'LineWidth', 2);
 
-% ib (green)
+% ib 
 p1 = map_to_norm(0, 0);
 p2 = map_to_norm(real(ib_plot), imag(ib_plot));
 annotation('arrow', [p1(1) p2(1)], [p1(2) p2(2)], 'Color', 'g', 'LineWidth', 2);
 
-% i0 (magenta)
+% i0 
 p1 = map_to_norm(0, 0);
 p2 = map_to_norm(real(i0_plot), imag(i0_plot));
 annotation('arrow', [p1(1) p2(1)], [p1(2) p2(2)], 'Color', 'm', 'LineWidth', 2);
 
-% v (red)
+% v 
 p1 = map_to_norm(0, 0);
 p2 = map_to_norm(real(v_plot), imag(v_plot));
 annotation('arrow', [p1(1) p2(1)], [p1(2) p2(2)], 'Color', 'r', 'LineWidth', 2);
 
-% --- 8. Legend (Manual Text Boxes for Annotation Arrows) ---
 text(real(ig_plot)*1.05, imag(ig_plot)*1.05, '2Rl \times i_g', 'Color', 'b', 'FontSize', 12);
 text(real(ib_plot)*1.05, imag(ib_plot)*1.05, '2Rl \times i_b', 'Color', 'g', 'FontSize', 12);
 text(real(i0_plot)*1.05, imag(i0_plot)*1.05, '2Rl \times i_0', 'Color', 'm', 'FontSize', 12);
