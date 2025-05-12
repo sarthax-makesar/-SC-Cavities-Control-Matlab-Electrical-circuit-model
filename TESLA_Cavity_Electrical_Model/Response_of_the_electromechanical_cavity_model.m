@@ -1,106 +1,109 @@
-% Electromechanical Cavity Model Simulation 
+
+% Electromechanical Cavity Simulation
+% Aims for more stable demonstration of Lorentz detuning effects
+% Using 16mA drive and adjusting mechanical Q-factors 
+
 clear; clc; close all;
 
-%  Physical & model constants from Table 
-rho      = 520;                      %  shunt impedance
-QL       = 3e6;                      % Loaded Q
-Rl       = rho / (4 * QL);           % Correct loaded shunt impedance 
-vc       = 25;                       % MV 
-k_vec    = [0.1, 0.1, 0.1, 0.5];      % Hz/(MV)^2 (4 modes)
-df0_Hz   = sum(k_vec .* vc^2);       % Predetuning in Hz to cancel Lorentz pull
-Dw0      = 2 * pi * df0_Hz;          % rad/s
+% 1) Simulation Parameters
+T = 1e-6;         % Time step [s]
+tpe = 10e-3;      % Pulse end time [s]
+tsm = 100e-3;     % Total simulation time [s]
+tvec = 0:T:tsm;
+N = numel(tvec);
 
-% Mechanical mode properties
-f_mech   = [235, 290, 450];          % Hz
-Q_mech   = [100, 100, 100];
-tau4     = 0.1e-3;                   % s (1st-order mode)
+% 2) Electrical Model Parameters 
+fhb = 217;        % Half‐bandwidth [Hz]
+omhb = 2*pi*fhb;  % Cavity half-bandwidth [rad/s]
+C_cav = 0.235e-12;% Cavity capacitance [F]
+idr = 16e-3;      % Drive current [A] (original from Fig 3.1-3 caption)
 
-% Derived current for steady-state
-ig       = vc * 1e6 / (2 * Rl);       % in A
+fpd = 417;        % Predetuning [Hz]
+ompd = 2*pi*fpd;  % Predetuning [rad/s]
 
-%  Discretization 
-T        = 1e-6;                     % s
-T_ms     = T * 1e3;
-t_total  = 20e-3;                   % 20 ms
-N        = round(t_total / T);
-n        = (0:N)';
-t_ms     = n * T * 1e3;
+vc = zeros(1,N);
+detHz = zeros(1,N);
+detHz(1) = fpd;
 
-% Input current pulse (10 ms on, then off)
-ig_n     = ig * ones(size(n));
-ig_n(t_ms > 10) = 0;
+%% 3) Mechanical Model Parameters
+fmc = [235, 290, 450];
+% --- ADJUSTED PARAMETER for more damping ---
+% Qmc = [30, 30, 30];  % Mechanical quality factors (originally [100,100,100])
+Qmc = [100,100,100]; % Original 
 
-%  Preallocate 
-v        = zeros(size(n));           % complex voltage [V]
-ampl     = zeros(size(n));           % [MV]
-phase    = zeros(size(n));           % [rad]
-detHz    = zeros(size(n));           % [Hz]
+Km = [0.1, 0.1, 0.1];  % Lorentz constants for resonant modes [Hz/(MV)^2]
+Kinl = 0.5;            % Lorentz constant for inertialess mode [Hz/(MV)^2]
+tauinl = 0.1e-3;       % Time constant for inertialess mode [s]
 
-% Mechanical states: 3 second-order + 1 first-order
-dw4      = zeros(size(n));           % mode 4 (1st order)
-W2       = zeros(2, 3, N+1);          % modes 1-3: [pos; vel] per mode
+nrm = numel(fmc);
+omm = 2*pi*fmc;
 
-% Build system matrices for each mode
-Am = zeros(2,2,3);
-Bm = zeros(2,3);
-for m = 1:3
-    wm = 2 * pi * f_mech(m);
-    qm = Q_mech(m);
-    Am(:,:,m) = [0 1; -wm^2, -wm/qm];
-    Bm(:,m)   = [0; -2*pi * k_vec(m)];
-end
-b4 = 2 * pi * k_vec(4) / tau4;
+wrs = zeros(2*nrm, N);
+wis = zeros(1,N);
 
-%  Simulation Loop 
-for k = 1:N
-    % Detuning computation
-    Dw = Dw0 + sum(W2(1,:,k)) + dw4(k);
-    detHz(k) = Dw / (2*pi);
+%% 4) Time-loop (Euler integration)
+for n = 1:N-1
+    sum_om_res_n = sum(wrs(1:2:end, n));
+    omDyn_n = sum_om_res_n + wis(n);
+    omTot_n = omDyn_n + ompd;
+    detHz(n) = omTot_n / (2*pi);
 
-    % Electrical forward-Euler update
-    Ae = 2 * pi * 217 - 1i * Dw;  % omega_h - j*Dw
-    dv = -Ae * v(k) + 2 * Rl * 2 * pi * 217 * ig_n(k);
-    v(k+1) = v(k) + T * dv;
-
-    % Record amplitude & phase
-    ampl(k)  = abs(v(k)) / 1e6;   % MV
-    phase(k) = angle(v(k));
-
-    % Voltage squared (in MV^2)
-    v2 = ampl(k)^2;
-
-    % Mechanical updates
-    for m = 1:3
-        x = W2(:,m,k);
-        W2(:,m,k+1) = x + T * (Am(:,:,m) * x + Bm(:,m) * v2);
+    ic = 0;
+    if tvec(n) < tpe
+        ic = idr;
     end
-    dw4(k+1) = dw4(k) + T * (-dw4(k) / tau4 + b4 * v2);
+    dvcdt = (-omhb + 1j*omTot_n) * vc(n) + (1/C_cav)*ic;
+    vc(n+1) = vc(n) + T*dvcdt;
+
+    vMVSq_n = (abs(vc(n))*1e-6)^2;
+
+    for m_idx = 1:nrm
+        idx = 2*m_idx-1;
+        om_m = omm(m_idx);
+        Qm_val = Qmc(m_idx); % Using potentially modified Q
+        K_val = Km(m_idx);
+
+        force_res = -2*pi*K_val * (om_m^2) * vMVSq_n;
+        d_om_dt = wrs(idx+1,n);
+        d2_om_dt2 = force_res - (om_m/Qm_val)*wrs(idx+1,n) - (om_m^2)*wrs(idx,n);
+        wrs(idx,  n+1) = wrs(idx,  n) + T*d_om_dt;
+        wrs(idx+1,n+1) = wrs(idx+1,n) + T*d2_om_dt2;
+    end
+
+    force_inl = -2*pi*Kinl * vMVSq_n;
+    d_wis_dt = (force_inl - wis(n)) / tauinl;
+    wis(n+1) = wis(n) + T*d_wis_dt;
 end
 
-% Trim trailing point
-ampl(end) = []; phase(end) = []; detHz(end) = []; t_ms(end) = [];
+sum_om_res_N = sum(wrs(1:2:end, N));
+omDyn_N = sum_om_res_N + wis(N);
+detHz(N) = (omDyn_N + ompd) / (2*pi);
 
-% Plotting 
-figure('Position',[100 100 1000 600]);
+%% 5) Plots
+figure('Position',[100 100 700 950]);
+plot_lim_ms = 15;
 
-subplot(2,2,1);
-plot(t_ms, ampl, 'b', 'LineWidth', 1.5);
-xlabel('time [ms]'); ylabel('Amplitude [MV]');
-title('Amplitude during pulse'); xlim([0 10]); grid on;
+h_ax1 = subplot(4,1,1);
+plot(tvec*1e3, abs(vc)/1e6,'LineWidth',1.5)
+xlabel('Time [ms]'); ylabel('Amp. [MV]')
+title(['Amplitude (Drive Current = ', num2str(idr*1e3), ' mA, Modified Qm)'])
+grid on; ylim('auto'); xlim([0 plot_lim_ms]);
 
-subplot(2,2,2);
-plot(t_ms, phase, 'r', 'LineWidth', 1.5);
-xlabel('time [ms]'); ylabel('Phase [rad]');
-title('Phase during pulse'); xlim([0 10]); grid on;
+h_ax2 = subplot(4,1,2);
+plot(tvec*1e3, unwrap(angle(vc)),'LineWidth',1.5)
+xlabel('Time [ms]'); ylabel('Phase [rad]')
+title('Phase evolution')
+grid on; ylim('auto'); xlim([0 plot_lim_ms]);
 
-subplot(2,2,3);
-plot(t_ms, detHz, 'k', 'LineWidth', 1.5);
-xlabel('time [ms]'); ylabel('Detuning [Hz]');
-title('Detuning during pulse'); xlim([0 10]); grid on;
+h_ax3 = subplot(4,1,3);
+plot(tvec*1e3, detHz,'LineWidth',1.5)
+xlabel('Time [ms]'); ylabel('Detuning [Hz]')
+title('Total Detuning (during and after pulse)')
+grid on; ylim('auto'); xlim([0 plot_lim_ms]);
 
-subplot(2,2,4);
-plot(t_ms, detHz, 'k', 'LineWidth', 1.5);
-xlabel('time [ms]'); ylabel('Detuning [Hz]');
-title('Detuning after pulse'); xlim([10 20]); grid on;
-
-sgtitle('Electromechanical Cavity Model Response (Corrected)', 'FontSize', 14);
+h_ax4 = subplot(4,1,4);
+idx_start_after = find(tvec >= tpe, 1);
+plot(tvec(idx_start_after:end)*1e3, detHz(idx_start_after:end),'LineWidth',1.5)
+xlabel('Time [ms]'); ylabel('Detuning [Hz]')
+title('Detuning after pulse (Zoomed, extended time)')
+grid on; ylim('auto'); xlim([tpe*1e3 tsm*1e3]);
