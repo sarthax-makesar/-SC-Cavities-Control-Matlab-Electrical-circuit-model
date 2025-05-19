@@ -5,7 +5,7 @@ clearvars;
 close all;
 clc;
 
-% --- Parameters ---
+%  Parameters 
 f_hb = 217; % Cavity half-bandwidth (Hz)
 w_hb = 2 * pi * f_hb; % (rad/s)
 
@@ -15,21 +15,21 @@ tf_main = 500e-6; % Main filling time for detailed plots (s)
 w0_rho = 4.247e12; % Cavity parameter omega0*rho (Ohm/s or V/(A*s))
 R_L_cav = w0_rho / (2 * w_hb); % Loaded shunt impedance (Ohms)
 
-% --- Global setting for r_detuning for Plots 2 and 3 (for non-optimal modified trajectories) ---
+%  Global setting for r_detuning for Plots 2 and 3 (for non-optimal modified trajectories) 
 r_for_plots_2_3 = 0; % Default to resonant case (r=0)
 
-disp('--- Modified Cavity Filling Algorithms (parameter b, varying detuning r, optimal modified trajectory) ---');
+disp(' Modified Cavity Filling Algorithms (parameter b, varying detuning r, optimal modified trajectory) ');
 disp(['Vc_target = ' num2str(Vc/1e6) ' MV, Default tf = ' num2str(tf_main*1e6) ' us.']);
 disp(['Plots 2 & 3 for standard modified trajectories will use r = ' num2str(r_for_plots_2_3) '.']);
 disp(' ');
 
-% --- Helper function for metrics given 'b', detuning 'r', and trajectory type ---
+%  Helper function for metrics given 'b', detuning 'r', and trajectory type 
 
 function [v_abs, u_abs, ig, Pf, Pr, W_stored, eta_f] = calc_metrics_b_algo(b, r_detuning, trajectory_type, t_vec, Vc_in, tf_in, w_1_2_in, w0_rho_in, R_L_in)
     v_abs = zeros(size(t_vec));
     u_complex = zeros(size(t_vec)); % u(t) can be complex
 
-    % 1. Calculate |v(t)| based on trajectory_type
+    % 1. Calculation of |v(t)| based on trajectory_type
     if strcmp(trajectory_type, 'standard')
         if abs(b) < 1e-6 % b = 0 (Eq. 4.1-14)
             for i = 1:length(t_vec)
@@ -43,7 +43,7 @@ function [v_abs, u_abs, ig, Pf, Pr, W_stored, eta_f] = calc_metrics_b_algo(b, r_
                 end
             end
         end
-    elseif strcmp(trajectory_type, 'optimal_modified_sinh') % Eq. 4.1-15
+    elseif strcmp(trajectory_type, 'optimal_modified_sinh') 
          if abs(b) < 1e-6 % b = 0 (same as t/tf)
             for i = 1:length(t_vec)
                 if tf_in == 0, v_abs(i)=0; else, v_abs(i) = Vc_in * (t_vec(i) / tf_in); end
@@ -92,7 +92,7 @@ function [v_abs, u_abs, ig, Pf, Pr, W_stored, eta_f] = calc_metrics_b_algo(b, r_
             end
         end
     else % 'standard' trajectory, u(t) depends on r_detuning
-        if abs(r_detuning) < 1e-6 % Resonant case u(t) (from Eq. 4.1-13, 4.1-14 magnitudes)
+        if abs(r_detuning) < 1e-6 % Resonant case u(t) 
             if abs(b) < 1e-6 % b = 0
                 if tf_in == 0, u_complex(:)=0; else
                     for i = 1:length(t_vec), u_complex(i) = Vc_in * (1 + w_1_2_in * t_vec(i)) / tf_in; end
@@ -105,13 +105,13 @@ function [v_abs, u_abs, ig, Pf, Pr, W_stored, eta_f] = calc_metrics_b_algo(b, r_
                     if ~isempty(u_complex), if abs(den_u) > 1e-9, u_complex(1) = w_1_2_in * Vc_in * b / den_u; else u_complex(1)=0; end; end
                 end
             end
-        else % Non-resonant case u(t) (Eq. 4.1-17, 4.1-18)
-            if abs(b) < 1e-6 % b = 0 (Eq. 4.1-18)
+        else % Non-resonant case u(t) 
+            if abs(b) < 1e-6 % b = 0 
                 if tf_in == 0, u_complex(:)=0; else
                     for i = 1:length(t_vec), u_complex(i) = Vc_in * (1 + w_1_2_in * (1 - 1j * r_detuning) * t_vec(i)) / tf_in; end
                 end
                 if ~isempty(u_complex), if tf_in ~=0, u_complex(1) = Vc_in/tf_in; else u_complex(1)=0; end; end
-            else % b ~= 0 (Eq. 4.1-17)
+            else % b ~= 0 
                 den_u = 1 - exp(-b * w_1_2_in * tf_in);
                 if abs(den_u) < 1e-9, u_complex(:)=0; else
                     for i = 1:length(t_vec)
@@ -131,7 +131,7 @@ function [v_abs, u_abs, ig, Pf, Pr, W_stored, eta_f] = calc_metrics_b_algo(b, r_
     end
     u_abs = abs(u_complex);
 
-    % 3. Calculate derived metrics
+    % 3. Calculation of derived metrics
     ig = u_abs / w0_rho_in;
     Pf = 0.5 * R_L_in * (ig.^2);
     Pr = (abs(v_abs - R_L_in * ig).^2) / (2 * R_L_in); % Simplified Pr
@@ -141,7 +141,7 @@ function [v_abs, u_abs, ig, Pf, Pr, W_stored, eta_f] = calc_metrics_b_algo(b, r_
     if E_exp == 0 || isinf(E_exp) || isnan(E_exp), eta_f = 0; else eta_f = W_stored / E_exp; end
 end
 
-% --- Plot: Efficiency vs. 'b' for different 'r' and optimal modified (Fig. 4.1-5 style) ---
+%  Plot: Efficiency vs. 'b' for different 'r' and optimal modified (Fig. 4.1-5 style) 
 b_vals_plot1 = linspace(-2, 2, 101);
 t_for_plot1 = linspace(0, tf_main, 200); 
 r_values_plot1 = [0, 0.5, 1]; % For 'standard' trajectory
@@ -151,13 +151,13 @@ colors_plot1 = lines(length(r_values_plot1) + 2); % +2 for optimal lines
 figure('Name', 'Efficiency vs. b - Fig 4.1-5 Replication');
 hold on;
 
-% Theoretical Optimal Efficiency (Eq. 4.1-6)
+% Theoretical Optimal Efficiency 
 eta_theory_opt_val = 1 - exp(-2*w_hb*tf_main);
 plot(b_vals_plot1, ones(size(b_vals_plot1))*eta_theory_opt_val, 'k--', 'LineWidth', 1);
 legend_entries_plot1 = {'Theor. Max $\eta_{fo}$ (Eq.4.1-6)'};
 all_etas_plot1_curves = [];
 
-% Modified Algorithm with v(t) from Eq. 4.1-13/14, for different 'r'
+% Modified Algorithm with v(t) for different 'r'
 for j = 1:length(r_values_plot1)
     current_r = r_values_plot1(j);
     eta_f_b_plot1_std = zeros(size(b_vals_plot1));
@@ -174,7 +174,7 @@ for j = 1:length(r_values_plot1)
     end
 end
 
-% "Optimal Modified Solution" (Eq. 4.1-15 for v(t), resonant, red line in Fig 4.1-5)
+% "Optimal Modified Solution" 
 eta_f_b_opt_mod = zeros(size(b_vals_plot1));
 for i = 1:length(b_vals_plot1)
     % This trajectory is always considered under resonant conditions (r=0 for its u(t) calc)
@@ -196,7 +196,7 @@ ylim([ylim_min_plot1, max(0.76, current_max_plot1_data * 1.02)]);
 disp('PLOT 1: Efficiency vs. parameter b, replicating Fig 4.1-5 lines.');
 
 
-% --- Determine optimal 'b' for r=0 STANDARD trajectory for use in subsequent plots ---
+%  Determine optimal 'b' for r=0 STANDARD trajectory for use in subsequent plots 
 temp_eta_for_opt_b_std_r0 = zeros(size(b_vals_plot1));
 for k_opt_b = 1:length(b_vals_plot1)
     [~,~,~,~,~,~,temp_eta_for_opt_b_std_r0(k_opt_b)] = calc_metrics_b_algo(b_vals_plot1(k_opt_b), 0, 'standard', t_for_plot1, Vc, tf_main, w_hb, w0_rho, R_L_cav);
@@ -205,7 +205,7 @@ end
 optimal_b_for_std_r0_val = b_vals_plot1(idx_opt_b_r0_for_plots(1));
 
 
-% --- Plot: Efficiency vs. Filling Time for selected 'b' (using r_for_plots_2_3, 'standard' trajectory) ---
+%  Plot: Efficiency vs. Filling Time for selected 'b' (using r_for_plots_2_3, 'standard' trajectory) 
 tf_vals_plot2 = linspace(200e-6, 1200e-6, 100);
 b_sel_plot2 = {0, 0.5, 1, optimal_b_for_std_r0_val};
 b_lbl_plot2 = {'$b=0$', '$b=0.5$', '$b=1$', sprintf('$b\\approx%.2f$ (Near Opt. $\\eta_f$ for Std. r=0)',optimal_b_for_std_r0_val)};
@@ -229,7 +229,7 @@ for i = 1:length(b_sel_plot2)
     leg_plot2{end+1} = b_lbl_plot2{i};
 end
 hold off;
-title({sprintf('$\\eta_f$ vs. $t_f$ for Std. Traj. & sel. $b$ ($r=%.1f$)',r_for_plots_2_3);'(Fig 4.1-4 style)'},'Interpreter','latex');
+title({sprintf('$\\eta_f$ vs. $t_f$ for Std. Traj. & sel. $b$ ($r=%.1f$)',r_for_plots_2_3);'(_)'},'Interpreter','latex');
 xlabel('$t_f$ ($\mu$s)','Interpreter','latex'); ylabel('$\eta_f$','Interpreter','latex');
 legend(leg_plot2, 'Location','SouthEast','Interpreter','latex', 'FontSize', 8);
 grid on; ylim([0.3 1]);
