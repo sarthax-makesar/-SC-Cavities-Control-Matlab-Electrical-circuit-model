@@ -1,5 +1,4 @@
-% MATLAB Script for Analyzing Cavity Decay Range (Electrical Model)
-% Based on "Complex Envelope Control..." document, Section 4.1
+% MATLAB Script for Analyzing Cavity Decay Range
 
 clearvars;
 close all;
@@ -16,12 +15,12 @@ decay_duration = 2e-3; % Duration of decay to observe (s), e.g., 2ms
 num_points = 1000;    % Number of points for time vector
 t_decay = linspace(0, decay_duration, num_points);
 
-disp('--- Cavity Decay Range Analysis (Electrical Model, Section 4.1) ---');
+disp(' Cavity Decay Range Analysis');
 disp(['Initial |V_start| = ' num2str(V_start_mag/1e6) ' MV, Initial Phase = ' num2str(phi_start_rad) ' rad.']);
 disp(['Observing decay for ' num2str(decay_duration*1e3) ' ms.']);
 disp(' ');
 
-% --- Case 1: Effect of omega_1/2 on Amplitude Decay (DeltaOmega = 0) ---
+%  Case 1: Effect of omega_1/2 on Amplitude Decay (DeltaOmega = 0)
 delta_w_case1_rad_s = 0; % Zero detuning for this case
 f_hb_values_Hz = [100, 217, 400]; % Different half-bandwidths to test
 colors_case1 = lines(length(f_hb_values_Hz));
@@ -62,7 +61,7 @@ subplot(2,1,2); legend(legend_entries_case1,'Location','NorthEast','Interpreter'
 disp('PLOT 1: Shows amplitude decay for different half-bandwidths (f_1/2).');
 disp('  - Top: |v(t)|. Bottom: ln|v(t)|, where slope illustrates -omega_1/2.');
 
-% --- Case 2: Effect of constant DeltaOmega on Phase & I/Q Plot ---
+%  Case 2: Effect of constant DeltaOmega on Phase & I/Q Plot 
 delta_w_values_Hz_case2 = [-200, 0, 200]; % Hz; (0 for reference, +/- for detuning)
 colors_case2 = lines(length(delta_w_values_Hz_case2));
 w_hb_case2 = w_hb_default; % Use default omega_1/2
@@ -107,7 +106,7 @@ subplot(1,2,1); legend(legend_entries_case2_phase,'Location','NorthWest','Interp
 subplot(1,2,2); legend(legend_entries_case2_iq,'Location','NorthEast','Interpreter','latex', 'FontSize', 8);
 disp('PLOT 2: Shows phase evolution and I/Q trajectory for different constant detunings (Delta_f).');
 
-% --- Case 3: Effect of Time-Varying DeltaOmega(t) on Phase ---
+%  Case 3: Effect of Time-Varying DeltaOmega(t) on Phase 
 w_hb_case3 = w_hb_default;
 v_mag_t_case3 = V_start_mag * exp(-w_hb_case3 * t_decay);
 
