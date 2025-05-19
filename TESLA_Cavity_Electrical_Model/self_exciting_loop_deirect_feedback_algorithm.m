@@ -1,11 +1,10 @@
-% MATLAB Script for Analyzing Self-Exciting Loop (SEL) Control (Cleaner Figure 3 with Energy Display)
-% Based on "Complex Envelope Control..." document, Chapter 4.1
+% MATLAB Script for Analyzing Self-Exciting Loop (SEL) Control 
 
 clearvars;
 close all;
 clc;
 
-% --- Parameters ---
+%  Parameters 
 f_half_bandwidth = 217; % Cavity half-bandwidth (Hz)
 omega_half_bandwidth = 2 * pi * f_half_bandwidth; % (rad/s)
 
@@ -19,14 +18,14 @@ R_L = omega0_rho_val / (2 * omega_half_bandwidth); % Loaded shunt impedance (Ohm
 t = linspace(0, tf_specific, 1000);
 small_epsilon = 1e-12; % For numerical stability near t=0
 
-disp('--- Analyzing Self-Exciting Loop (SEL) Control ---');
+disp(' Analyzing Self-Exciting Loop (SEL) Control ');
 disp(['Target Vc = ' num2str(Vc_target/1e6) ' MV, Filling time tf = ' num2str(tf_specific*1e6) ' us.']);
 disp('This script visualizes concepts related to SEL as described in the document.');
 disp(' ');
 
-% --- 1. Optimal Energy Efficiency vs. Filling Time (Target for SEL) ---
+%  1. Optimal Energy Efficiency vs. Filling Time (Target for SEL) 
 tf_range = linspace(100e-6, 2000e-6, 500);
-eta_fo = 1 - exp(-2 * omega_half_bandwidth * tf_range); % Eq. 4.1-6
+eta_fo = 1 - exp(-2 * omega_half_bandwidth * tf_range); 
 
 figure('Name', 'Optimal Energy Efficiency (Target for SEL)');
 plot(tf_range * 1e6, eta_fo, 'LineWidth', 1.5);
@@ -38,7 +37,7 @@ ylim([0 1]);
 text(tf_range(100)*1e6 + 50, eta_fo(100)+0.05, sprintf('f_{1/2} = %d Hz', f_half_bandwidth),'Interpreter','latex', 'FontSize',9);
 disp('PLOT 1: Shows the optimal energy efficiency SEL aims to achieve as a function of filling time.');
 
-% --- 2. SEL Gain Factor G_SEL(t) & Resonance Tracking Explanation ---
+%  2. SEL Gain Factor G_SEL(t) & Resonance Tracking Explanation 
 G_SEL_t = zeros(size(t));
 for k = 1:length(t)
     if t(k) < small_epsilon
@@ -70,7 +69,7 @@ disp('    If v(t) phase is correct for resonance, u(t) from SEL inherently has t
 disp(' ');
 
 
-% --- 3. Cavity Variables under SEL (Optimal Path) & Klystron Power Constraint ---
+%  3. Cavity Variables under SEL (Optimal Path) & Klystron Power Constraint 
 v_opt_t_abs = Vc_target * (sinh(omega_half_bandwidth * t) / sinh(omega_half_bandwidth * tf_specific));
 v_opt_t_abs(1) = 0;
 
@@ -81,7 +80,7 @@ i_g_t_SEL = u_SEL_t_abs / omega0_rho_val;
 P_f_t_SEL = 0.5 * R_L * (i_g_t_SEL.^2);
 P_r_t_SEL = (abs(v_opt_t_abs - R_L * i_g_t_SEL).^2) / (2 * R_L);
 
-% Calculate Stored Energy and Efficiency for annotation
+% Calculation fro Stored Energy and Efficiency for annotation
 W_tf_SEL = (Vc_target^2) / (2 * omega0_rho_val); % Stored energy at t_f
 expended_energy_SEL = trapz(t, P_f_t_SEL);
 eta_calculated_SEL = W_tf_SEL / expended_energy_SEL;
@@ -142,9 +141,9 @@ text_y_pos1 = max(P_f_t_SEL/1e3) * 0.8;
 text_y_pos2 = max(P_f_t_SEL/1e3) * 0.7;
 if isempty(text_y_pos1) || isnan(text_y_pos1) || text_y_pos1 <=0, text_y_pos1 = 100; text_y_pos2 = 80; end % Fallback positions
 
-text(tf_specific*1e6 * 0.05, text_y_pos1, sprintf('Stored Energy $W(t_f) = %.1f$ J', W_tf_SEL), ...
+text(tf_specific*1e6 * 0.05, text_y_pos1, sprintf('Stored Energy $W(t_f) = %.1f$ J', W_tf_SEL), 
      'Interpreter','latex', 'FontSize', fig_font_size-1, 'BackgroundColor', [0.95 0.95 0.95]);
-text(tf_specific*1e6 * 0.05, text_y_pos2, sprintf('Energy Efficiency $\\eta_f = %.3f$', eta_calculated_SEL), ...
+text(tf_specific*1e6 * 0.05, text_y_pos2, sprintf('Energy Efficiency $\\eta_f = %.3f$', eta_calculated_SEL), 
      'Interpreter','latex', 'FontSize', fig_font_size-1, 'BackgroundColor', [0.95 0.95 0.95]);
 
 
