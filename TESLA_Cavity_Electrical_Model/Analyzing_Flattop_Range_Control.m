@@ -4,7 +4,7 @@ clearvars;
 close all;
 clc;
 
-% --- Parameters ---
+%  Parameters 
 f_hb = 217; % Cavity half-bandwidth (Hz)
 w_hb = 2 * pi * f_hb; % omega_1/2 (rad/s)
 
@@ -13,12 +13,12 @@ phi_b = 0; % Relative beam phase (radians, 0 for on-crest)
 
 w0_rho = 4.247e12; % Cavity parameter omega0*rho (Ohm/s or V/(A*s))
 
-disp('--- Flattop Range Control Analysis (Electrical Model, Section 4.1) ---');
+disp(' Flattop Range Control Analysis ');
 disp(['Target |Vc| = ' num2str(Vc_mag/1e6) ' MV, Beam phase phi_b = ' num2str(phi_b) ' rad.']);
 disp(' ');
 
-% --- Helper function for Flattop Pf and eta_b ---
-% Calculates Pf and eta_b for given |Vc|, |Ib|, r_detuning, phi_b_in
+%  Helper function for Flattop Pf and eta_b 
+% Calculation of Pf and eta_b for given |Vc|, |Ib|, r_detuning, phi_b_in
 function [Pf_calc, eta_b_calc, Pb_calc, g_factor] = calculate_flattop_metrics(Vc_abs, Ib_abs, r_detuning, phi_b_in, w_1_2_in, w0_rho_in)
     if Vc_abs == 0, Pf_calc=inf; eta_b_calc=0; Pb_calc=0; g_factor=inf; return; end
     
@@ -55,7 +55,7 @@ function [Pf_calc, eta_b_calc, Pb_calc, g_factor] = calculate_flattop_metrics(Vc
     if eta_b_calc > 1, eta_b_calc = 1; end % Max efficiency is 1
 end
 
-% ---  Pf and eta_b vs. Relative Detuning 'r' ---
+%   Pf and eta_b vs. Relative Detuning 'r' 
 r_vals_plot1 = linspace(-1.5, 1.5, 201); % Relative detuning r = DeltaOmega / omega_1/2
 Ib_plot1 = 8e-3; % Fixed beam current (A) for this plot, e.g., 8mA
 Pf_vs_r = zeros(size(r_vals_plot1));
@@ -90,7 +90,7 @@ hold on; plot(r_vals_plot1(idx_max_eta_r), max_eta_r, 'bo', 'MarkerFaceColor','b
 text(r_vals_plot1(idx_max_eta_r), max_eta_r - 0.05, sprintf('Max $\\eta_b \\approx %.3f$ @ $r \\approx %.2f$', max_eta_r, r_vals_plot1(idx_max_eta_r)),'Interpreter','latex','FontSize',8); hold off;
 disp('PLOT 1: Forward Power and Flattop Efficiency vs. Relative Detuning r.');
 
-% ---  Pf and eta_b vs. Beam Current Ib ---
+%  Pf and eta_b vs. Beam Current Ib 
 Ib_vals_plot2 = linspace(0.1e-3, 20e-3, 200); % Beam current from 0.1mA to 20mA
 r_plot2 = 0; % Fixed relative detuning for this plot (e.g., on resonance r=0)
 % Can add another r value for comparison if needed
@@ -112,7 +112,7 @@ figure('Name', 'Flattop: Pf and Efficiency vs. Beam Current');
 subplot(2,1,1);
 plot(Ib_vals_plot2 * 1e3, Pf_vs_Ib / 1e3, 'b-', 'LineWidth', 1.5); hold on;
 % plot(Ib_vals_plot2 * 1e3, Pf_vs_Ib_off_res / 1e3, 'g--', 'LineWidth', 1.5);
-title({sprintf('Forward Power $P_f$ vs. Beam Current $I_b$'); ...
+title({sprintf('Forward Power $P_f$ vs. Beam Current $I_b$'); 
        sprintf('$|V_c|=%.0f$MV, $r=%.1f, \\phi_b=%.1f$rad', Vc_mag/1e6, r_plot2, phi_b)},'Interpreter','latex');
 xlabel('Beam Current $I_b$ (mA)','Interpreter','latex');
 ylabel('$P_f$ (kW)','Interpreter','latex');
@@ -131,8 +131,8 @@ grid on; ylim([0 1.05]);
 hold off;
 disp('PLOT 2: Forward Power and Flattop Efficiency vs. Beam Current.');
 
-% --- Note on Time-Varying Detuning ---
+%  Note on Time-Varying Detuning 
 disp(' ');
 disp('NOTE: This script assumes constant detuning during flattop for the parametric plots.');
-disp('For time-varying detuning DeltaOmega(t) during flattop, one would calculate u_g(t) using Eq. 4.1-19');
+disp('For time-varying detuning DeltaOmega(t) during flattop, one would calculate u_g(t) ');
 disp('over time, then Pf(t), and integrate Pf(t) to find average power for efficiency.');
