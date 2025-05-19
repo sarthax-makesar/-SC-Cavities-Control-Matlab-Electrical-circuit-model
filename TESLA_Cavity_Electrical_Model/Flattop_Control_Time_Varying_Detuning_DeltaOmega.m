@@ -1,11 +1,11 @@
 % MATLAB Script for Flattop Control with Time-Varying Detuning DeltaOmega(t)
-% Based on "Complex Envelope Control..." document, Section 4.1
+
 
 clearvars;
 close all;
 clc;
 
-% --- Parameters ---
+%  Parameters 
 f_hb = 217; % Cavity half-bandwidth (Hz)
 w_hb = 2 * pi * f_hb; % omega_1/2 (rad/s)
 
@@ -13,7 +13,7 @@ Vc_mag = 25e6; % Target cavity voltage magnitude |Vc| (V)
 Vc_phase_rad = 0; % Target cavity voltage phase (rad)
 Vc_complex = Vc_mag * exp(1j * Vc_phase_rad); % Complex Vc
 
-Ib_mag = 8e-3; % Beam current magnitude |Ib| (A), e.g., 8mA
+Ib_mag = 8e-3; % Beam current magnitude |Ib| (A)
 phi_b_rel_Vc = 0; % Relative beam phase to Vc (rad, 0 for on-crest)
 Ub_phase_rad = Vc_phase_rad + phi_b_rel_Vc; % Absolute phase of beam current
 w0_rho = 4.247e12; % Cavity parameter omega0*rho (Ohm/s or V/(A*s))
@@ -21,18 +21,18 @@ Ub_complex = w0_rho * Ib_mag * exp(1j * Ub_phase_rad); % Complex unified beam lo
 
 R_L_cav = w0_rho / (2 * w_hb); % Loaded shunt impedance (Ohms)
 
-flattop_duration = 0.8e-3; % Flattop duration (s), e.g., 0.8ms
+flattop_duration = 0.8e-3; % Flattop duration (s)
 num_points = 800; % Number of points for time vector
 t_vec = linspace(0, flattop_duration, num_points);
 dt = t_vec(2)-t_vec(1);
 
-disp('--- Flattop Control with Time-Varying Detuning DeltaOmega(t) ---');
+disp(' Flattop Control with Time-Varying Detuning DeltaOmega(t) ');
 disp(['Target Vc = ' num2str(Vc_mag/1e6) ' MV at phase ' num2str(Vc_phase_rad) ' rad.']);
 disp(['Beam Ib = ' num2str(Ib_mag*1e3) ' mA at relative phase ' num2str(phi_b_rel_Vc) ' rad to Vc.']);
 disp(['Flattop duration = ' num2str(flattop_duration*1e3) ' ms.']);
 disp(' ');
 
-% --- Define DeltaOmega(t) Profiles ---
+%  Define DeltaOmega(t) Profiles 
 % Profile 1: Constant Detuning
 delta_w_const_Hz = 100; % Example: 100 Hz detuning
 delta_w_profile1 = 2 * pi * delta_w_const_Hz * ones(size(t_vec));
@@ -47,7 +47,7 @@ profile2_name = sprintf('Ramp Detuning (%.0f to %.0f Hz)', delta_w_start_Hz, del
 % Profile 3: Sinusoidal (Microphonic-like) Detuning
 delta_w_offset_Hz = 50;   % Hz
 Am_micro_Hz       = 150;  % Amplitude of microphonic detuning in Hz
-fm_micro          = 250;  % Frequency of microphonics in Hz (e.g., 250 Hz)
+fm_micro          = 250;  % Frequency of microphonics in Hz 
 phi_m_micro       = 0;    % Initial phase of microphonics
 delta_w_profile3 = 2 * pi * (delta_w_offset_Hz + Am_micro_Hz * sin(2 * pi * fm_micro * t_vec + phi_m_micro));
 profile3_name = sprintf('Sinusoidal Detuning (Offset %.0fHz, Amp %.0fHz, Freq %.0fHz)', delta_w_offset_Hz, Am_micro_Hz, fm_micro);
@@ -55,7 +55,7 @@ profile3_name = sprintf('Sinusoidal Detuning (Offset %.0fHz, Amp %.0fHz, Freq %.
 detuning_profiles = {delta_w_profile1, delta_w_profile2, delta_w_profile3};
 profile_names     = {profile1_name, profile2_name, profile3_name};
 
-% --- Loop through profiles and plot ---
+%  Loop through profiles and plot 
 for k_profile = 1:length(detuning_profiles)
     current_delta_w_profile = detuning_profiles{k_profile};
     current_profile_name    = profile_names{k_profile};
@@ -87,13 +87,12 @@ for k_profile = 1:length(detuning_profiles)
         % Pr_t(i)        = (abs(Vc_complex - Vg_complex_t(i)).^2) / (2 * R_L_cav); % Simplified
         % A more common representation for Pr involves forward and cavity voltage:
         % V_forward_equivalent = u_g_complex_t(i) / (2*w_hb); % Assuming u_g is from definition u_g = 2*w_1/2*V_fwd_at_cavity_transformed
-        % Reflected power calculation can be tricky without full impedance view.
-        % For now, let's focus on Pf and ug.
-        % A simpler Pr from magnitudes as before (less accurate for varying phases):
+      
+        
         Pr_t(i) = (abs(Vc_mag - R_L_cav * i_g_abs_t(i)).^2) / (2 * R_L_cav); % Highly simplified
     end
     
-    % Calculate average Pf and efficiency
+    % Calculation of average Pf and efficiency
     Pb_const = Vc_mag * Ib_mag * cos(phi_b_rel_Vc);
     Pf_avg = mean(Pf_t);
     eta_b_avg = 0;
@@ -141,7 +140,7 @@ for k_profile = 1:length(detuning_profiles)
     grid on;
     text(flattop_duration*1e3*0.1, max(Pf_t)*0.9/1e3, sprintf('Avg. $\\eta_b \\approx %.3f$', eta_b_avg), 'Interpreter','latex','FontSize',8);
 
-    disp(['--- Results for Profile: ' current_profile_name ' ---']);
+    disp([' Results for Profile: ' current_profile_name ' ']);
     disp(['  Average Forward Power Pf_avg: ' num2str(Pf_avg/1e3, '%.1f') ' kW']);
     disp(['  Peak Forward Power Pf_peak: ' num2str(max(Pf_t)/1e3, '%.1f') ' kW']);
     disp(['  Beam Power Pb: ' num2str(Pb_const/1e3, '%.1f') ' kW']);
