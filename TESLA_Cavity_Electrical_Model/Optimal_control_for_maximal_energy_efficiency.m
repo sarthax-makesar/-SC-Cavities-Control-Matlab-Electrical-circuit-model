@@ -1,11 +1,10 @@
-% MATLAB Script for Optimal Cavity Filling Characteristics (Optimized)
-% Based on "Complex Envelope Control..." document, Chapter 4.1
+% MATLAB Script for Optimal Cavity Filling Characteristics 
 
 clearvars;
 close all;
 clc;
 
-% --- Parameters ---
+%  Parameters 
 f_half_bandwidth = 217; % Cavity half-bandwidth (Hz)
 omega_half_bandwidth = 2 * pi * f_half_bandwidth; % (rad/s)
 
@@ -17,9 +16,9 @@ omega0_rho_val = 4.247e12;
 % R_L: Loaded shunt impedance (Ohms)
 R_L = omega0_rho_val / (2 * omega_half_bandwidth);
 
-% --- 1. Optimal Energy Efficiency vs. Filling Time ---
+%  1. Optimal Energy Efficiency vs. Filling Time 
 tf_range = linspace(100e-6, 2000e-6, 500);
-eta_fo = 1 - exp(-2 * omega_half_bandwidth * tf_range); % Eq. 4.1-6
+eta_fo = 1 - exp(-2 * omega_half_bandwidth * tf_range); 
 
 figure('Name', 'Optimal Energy Efficiency');
 plot(tf_range * 1e6, eta_fo, 'LineWidth', 1.5);
@@ -30,14 +29,14 @@ grid on;
 ylim([0 1]);
 text(tf_range(100)*1e6, eta_fo(100)+0.05, sprintf('f_{1/2} = %d Hz', f_half_bandwidth), 'FontSize', 9);
 
-% --- 2. Specific Optimal Filling Case ---
+%  2. Specific Optimal Filling Case 
 t = linspace(0, tf_specific, 1000); % Time vector
 
-% Optimal cavity voltage magnitude |v(t)| (Eq. 4.1-5)
+% Optimal cavity voltage magnitude |v(t)| 
 v_t_abs = Vc_target * (sinh(omega_half_bandwidth * t) / sinh(omega_half_bandwidth * tf_specific));
 v_t_abs(1) = 0;
 
-% Optimal unified input magnitude |u(t)| (Eq. 4.1-4) [V/s]
+% Optimal unified input magnitude |u(t)| [V/s]
 u_t_abs = omega_half_bandwidth * Vc_target * (exp(omega_half_bandwidth * t) / sinh(omega_half_bandwidth * tf_specific));
 
 % Generator current i_g(t) [A]
@@ -51,7 +50,7 @@ P_r_t = (abs(v_t_abs - R_L * i_g_t).^2) / (2 * R_L);
 
 % Stored Energy W_tf at end of fill [J]
 W_tf = (Vc_target^2) / (2 * omega0_rho_val);
-eta_calculated = W_tf / trapz(t, P_f_t); % Calculated efficiency
+eta_calculated = W_tf / trapz(t, P_f_t); %  efficiency Calculation
 
 % Plotting for specific case
 figure('Name', 'Optimal Cavity Filling Details');
