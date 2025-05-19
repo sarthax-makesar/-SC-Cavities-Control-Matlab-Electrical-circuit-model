@@ -1,11 +1,11 @@
-% MATLAB Script for Electromechanical Cavity Control (Fig. 4.2-2 style - Reworked)
+% MATLAB Script for Electromechanical Cavity Control
 % Focus on one dominant inertial mode + non-inertial for mechanical model
 
 clearvars; close all; clc;
 
-disp('--- Electromechanical Model Control Simulation (Reworked) ---');
+disp(' Electromechanical Model Control Simulation  ');
 
-% --- Simulation Parameters ---
+%  Simulation Parameters 
 T_s = 1e-6;         % Sampling time (s)
 t_fill = 500e-6;    % Filling duration (s)
 t_flattop = 800e-6; % Flattop duration (s)
@@ -17,25 +17,25 @@ n_pts = length(time_vec_sim);
 n_fill_end = round(t_fill / T_s);
 n_flattop_end = n_fill_end + round(t_flattop / T_s);
 
-% --- Electrical Parameters ---
+%  Electrical Parameters 
 f_hb = 217;           % Half-bandwidth (Hz)
 w_hb = 2 * pi * f_hb;   % omega_1/2 (rad/s)
 w0_rho = 4.247e12;    % omega0*rho (Ohm/s or V/(A*s))
 
-% --- Simulation Cases (Vc, Predetuning, Beam Current) ---
+%  Simulation Cases (Vc, Predetuning, Beam Current) 
 Vc_lvls_MV = [15, 20, 25];       % MV
 df0_lvls_Hz = [130, 230, 370];   % Approx. optimal predetuning (Hz)
 Ib_lvls_mA = [5.0, 6.5, 8.0];   % Approx. optimal beam current (mA)
 num_sim_cases = length(Vc_lvls_MV);
 sim_results = cell(num_sim_cases, 1);
 
-% --- Mechanical Model Constants ---
+%  Mechanical Model Constants 
 L_cav_sq = (1.037)^2; 
 K_L_Hz_per_MVm2_all = [0.1, 0.1, 0.1, 0.5]; % K factor Hz/(MV/m)^2
 km_Hz_per_MV2_all = K_L_Hz_per_MVm2_all / L_cav_sq; % k factor Hz/MV^2
 
 % Using ONE dominant inertial mode + non-inertial
-fm_mech_Hz_inertial = 235; % Hz (first mode from Table 3.1-1)
+fm_mech_Hz_inertial = 235; % Hz 
 wm_mech_rs_inertial = 2 * pi * fm_mech_Hz_inertial;
 Qm_mech_inertial = 100;
 km_Hz_per_MV2_inertial = km_Hz_per_MV2_all(1);
@@ -43,7 +43,7 @@ km_Hz_per_MV2_inertial = km_Hz_per_MV2_all(1);
 tau_noni_s = 0.1e-3; 
 k_noni_Hz_MV2 = km_Hz_per_MV2_all(4);
 
-% --- Main Simulation Loop ---
+%  Main Simulation Loop 
 for i_case = 1:num_sim_cases
     Vc_mag_target = Vc_lvls_MV(i_case) * 1e6; 
     df0_Hz = df0_lvls_Hz(i_case);             
@@ -143,7 +143,7 @@ for i_case = 1:num_sim_cases
 end
 disp('All simulations finished.');
 
-% --- Plotting (Overlaying results) ---
+%  Plotting (Overlaying results) 
 plot_fs = 8; 
 line_styles = {'-', '--', ':'};
 plot_colors = lines(num_sim_cases);
